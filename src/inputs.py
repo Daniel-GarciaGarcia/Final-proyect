@@ -6,8 +6,11 @@ import requests_oauthlib
 import tweepy
 import pandas as pd
 import time
+import nltk
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+from nltk.stem import WordNetLemmatizer
 
-api = tweepy.API(auth, wait_on_rate_limit=True)
 
 def get_auth():
 
@@ -38,4 +41,26 @@ def query_to_csv(text_query, count):
         print('failed on_status,', str(e))
         time.sleep(3)
 
+def process_tweets(tweet):
+    
+    # Remove links
+    tweet = re.sub(r"http\S+|www\S+|https\S+", '', tweet, flags=re.MULTILINE)
+    
+    # Remove mentions and hashtag
+    tweet = re.sub(r'\@\w+|\#','', tweet)
+    
+    # Tokenize the words
+    tokenized = word_tokenize(tweet)
 
+    # Remove the stop words
+    tokenized = [token for token in tokenized if token not in stopwords.words("english")] 
+
+    # Lemmatize the words
+    lemmatizer = WordNetLemmatizer()
+    tokenized = [lemmatizer.lemmatize(token, pos='a') for token in tokenized]
+
+    # Remove non-alphabetic characters and keep the words contains three or more letters
+    tokenized = [token for token in tokenized if token.isalpha() and len(token)>2]
+    # Fit and transform the vectorizer
+    return tokenized
+    
